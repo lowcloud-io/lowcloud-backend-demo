@@ -2,10 +2,10 @@
   "name": "lowcloud-backend-demo",
   "version": "1.0.0",
   "description": "Simple Node.js backend for Azure App Service demo",
-  "main": "app.js",
+  "main": "src/index.js",
   "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon app.js",
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
     "deploy": "node deploy.js"
   },
   "dependencies": {
