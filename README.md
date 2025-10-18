@@ -109,14 +109,56 @@ Request → Logger Middleware
 
 ## 🔧 Environment Variables
 
+Erstelle eine `.env` Datei im Root-Verzeichnis:
+
 ```env
-PORT=3000                # Server Port (optional, default: 3000)
-NODE_ENV=development     # Environment (development/production)
+# Server Configuration
+PORT=3000
+NODE_ENV=development
+
+# CORS - Allowed Frontend URLs (comma-separated)
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
 ```
+
+### Verfügbare Variablen
+
+| Variable          | Beschreibung                             | Standard      | Beispiel                                |
+| ----------------- | ---------------------------------------- | ------------- | --------------------------------------- |
+| `PORT`            | Server Port                              | `3000`        | `3000`                                  |
+| `NODE_ENV`        | Environment                              | `development` | `production`                            |
+| `ALLOWED_ORIGINS` | Erlaubte Frontend-URLs (komma-separiert) | -             | `http://localhost:3000,https://app.com` |
+
+### CORS-Konfiguration
+
+Das Backend verwendet CORS (Cross-Origin Resource Sharing), um Frontend-Zugriff von verschiedenen Domains zu ermöglichen.
+
+**Development-Setup:**
+
+```env
+# Spezifische Localhost-Ports
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:8080
+
+# ODER alle Origins erlauben (nur für Development!)
+ALLOWED_ORIGINS=*
+```
+
+**Production-Setup:**
+
+```env
+# Nur explizite Frontend-URLs
+ALLOWED_ORIGINS=https://frontend.example.com,https://app.example.com
+```
+
+**Wichtig:**
+
+- In Production niemals `ALLOWED_ORIGINS=*` verwenden!
+- Mehrere URLs mit Komma trennen (ohne Leerzeichen nach dem Komma)
+- URLs müssen exakt übereinstimmen (inkl. Protokoll und Port)
 
 ## 📦 Dependencies
 
 - `express` - Web Framework
+- `cors` - CORS Middleware
 - `dotenv` - Environment Variables
 - `nodemon` - Development Hot-Reload (devDependency)
 

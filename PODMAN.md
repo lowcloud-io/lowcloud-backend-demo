@@ -30,6 +30,29 @@ podman run -d \
   -e NODE_ENV=production \
   lowcloud-backend:latest
 
+# Mit CORS-Konfiguration (wichtig für Frontend-Zugriff!)
+podman run -d \
+  --name lowcloud-backend \
+  -p 3000:3000 \
+  -e NODE_ENV=production \
+  -e ALLOWED_ORIGINS="https://frontend.example.com,https://app.example.com" \
+  lowcloud-backend:latest
+
+# Development-Setup mit lokalem Frontend
+podman run -d \
+  --name lowcloud-backend \
+  -p 3000:3000 \
+  -e NODE_ENV=development \
+  -e ALLOWED_ORIGINS="http://localhost:3000,http://localhost:5173" \
+  lowcloud-backend:latest
+
+# Development: Alle Origins erlauben (nur für Testing!)
+podman run -d \
+  --name lowcloud-backend \
+  -p 3000:3000 \
+  -e ALLOWED_ORIGINS="*" \
+  lowcloud-backend:latest
+
 # Mit Volume für Logs (optional)
 podman run -d \
   --name lowcloud-backend \
@@ -189,9 +212,55 @@ Podman läuft standardmäßig rootless. Falls du Root-Rechte brauchst:
 sudo podman run -d --name lowcloud-backend -p 3000:3000 lowcloud-backend:latest
 ```
 
+## 🌐 CORS-Konfiguration für Multi-Frontend-Setup
+
+### Beispiel: Mehrere Frontends
+
+```bash
+# Production mit 3 verschiedenen Frontends
+podman run -d \
+  --name lowcloud-backend \
+  -p 3000:3000 \
+  -e NODE_ENV=production \
+  -e ALLOWED_ORIGINS="https://web.example.com,https://app.example.com,https://admin.example.com" \
+  lowcloud-backend:latest
+```
+
+### Environment-File verwenden
+
+Erstelle eine Datei `.env.production`:
+
+```env
+PORT=3000
+NODE_ENV=production
+ALLOWED_ORIGINS=https://frontend.com,https://app.com
+```
+
+Dann starte mit:
+
+```bash
+podman run -d \
+  --name lowcloud-backend \
+  -p 3000:3000 \
+  --env-file .env.production \
+  lowcloud-backend:latest
+```
+
+### CORS-Probleme debuggen
+
+```bash
+# Logs anschauen für CORS-Fehler
+podman logs -f lowcloud-backend
+
+# Shell öffnen und ENV-Variablen prüfen
+podman exec -it lowcloud-backend sh
+echo $ALLOWED_ORIGINS
+```
+
 ## 📝 Tipps
 
 1. **--rm Flag**: Container automatisch nach Stop löschen
 2. **-d Flag**: Detached mode (im Hintergrund)
 3. **-it Flags**: Interaktiv mit TTY (für Shell-Zugriff)
 4. **:z Flag bei Volumes**: SELinux-Label für Zugriff (wichtig auf Fedora/RHEL)
+5. **CORS in Production**: Immer explizite URLs angeben, niemals `*`
