@@ -110,12 +110,12 @@ docker-compose logs -f
   /services
     /db                → DB-Services (PostgreSQL)
     /demo              → Demo-Services (Mock-Daten)
+  /db
+    init.sql           → Datenbank-Schema & Seed-Daten
   /middleware          → Custom Middleware (Error Handler, Logging)
   /config              → Konfiguration (Database Connection Pool)
   /utils               → Hilfsfunktionen
   index.js             → Entry Point
-/db
-  init.sql             → Datenbank-Schema & Seed-Daten
 ```
 
 ## 🔌 API-Endpunkte
@@ -325,7 +325,7 @@ ALLOWED_ORIGINS=https://frontend.example.com,https://app.example.com
 
 ### Automatische Migrationen
 
-Beim Start des Backend-Containers (nur wenn `RUN_MIGRATIONS=true`) wird automatisch `db/init.sql` ausgeführt:
+Beim Start des Backend-Containers (nur wenn `RUN_MIGRATIONS=true`) wird automatisch `src/db/init.sql` ausgeführt:
 
 -   **Docker Compose:** Migrationen laufen automatisch ✅
 -   **Lokale Entwicklung:** Keine Migrationen (DB bleibt leer) ⏭️
@@ -338,7 +338,7 @@ RUN_MIGRATIONS=true
 
 ### Schema
 
-Die Datenbank enthält folgende Tabellen (`db/init.sql`):
+Die Datenbank enthält folgende Tabellen (`src/db/init.sql`):
 
 -   **users** - Benutzer-Daten
 

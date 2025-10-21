@@ -17,7 +17,7 @@ async function runMigrations() {
         console.log("🔄 Starte Datenbank-Migrationen...");
 
         // Lese init.sql
-        const sqlPath = path.join(__dirname, "../../db/init.sql");
+        const sqlPath = path.join(__dirname, "../db/init.sql");
 
         if (!fs.existsSync(sqlPath)) {
             console.log("⚠️  init.sql nicht gefunden, überspringe Migrationen");
