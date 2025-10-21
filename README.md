@@ -4,20 +4,49 @@ Express.js Backend mit Layered Architecture (Router → Controller → Service)
 
 ## 🚀 Quick Start
 
-### 1. Datenbank starten (PostgreSQL mit Docker)
+### 1. Mit Docker (Empfohlen - Backend + DB)
 
 ```bash
-# PostgreSQL Container starten
-docker-compose up -d
+# Beide Services starten (PostgreSQL + Backend)
+docker-compose up -d --build
 
 # Container-Status prüfen
 docker-compose ps
 
 # Logs anzeigen
+docker-compose logs -f
+
+# Nur Backend-Logs
+docker-compose logs -f backend
+
+# Nur DB-Logs
 docker-compose logs -f postgres
+
+# Services stoppen
+docker-compose down
+
+# Services stoppen + Daten löschen
+docker-compose down -v
 ```
 
-### 2. Environment-Variablen konfigurieren
+**Hinweis:** Mit Docker Compose:
+
+-   Keine `.env`-Datei nötig - alle Variablen sind in `docker-compose.yml`
+-   Keine lokale `npm install` nötig - läuft im Container
+-   Datenbank-Migrationen werden **automatisch beim Backend-Start** ausgeführt
+
+### 2. Lokal ohne Docker (Development)
+
+Wenn du lokal entwickeln möchtest ohne Docker für das Backend:
+
+#### a) Nur PostgreSQL mit Docker starten
+
+```bash
+# Nur die Datenbank starten (nicht das Backend)
+docker-compose up -d postgres
+```
+
+#### b) Environment-Variablen konfigurieren
 
 Erstelle eine `.env`-Datei im Root-Verzeichnis:
 
@@ -36,7 +65,7 @@ POSTGRES_PORT=5433
 DATABASE_URL=postgresql://postgres:postgres@localhost:5433/lowcloud_db
 ```
 
-### 3. Dependencies installieren & Server starten
+#### c) Dependencies installieren & Server lokal starten
 
 ```bash
 # Dependencies installieren
@@ -51,20 +80,20 @@ npm start
 
 Der Server läuft standardmäßig auf `http://localhost:3000`
 
-### Datenbank-Management
+## 🔧 Nützliche Docker-Befehle
 
 ```bash
-# Container stoppen
-docker-compose stop
-
-# Container stoppen & löschen (Daten bleiben erhalten)
-docker-compose down
-
-# Container + Daten löschen (⚠️ Vorsicht!)
-docker-compose down -v
-
 # PostgreSQL Shell öffnen
 docker exec -it lowcloud-postgres psql -U postgres -d lowcloud_db
+
+# Backend-Container Shell öffnen
+docker exec -it lowcloud-backend sh
+
+# Services neu bauen (nach Code-Änderungen)
+docker-compose up -d --build backend
+
+# Alle Container-Logs live anzeigen
+docker-compose logs -f
 ```
 
 ## 📁 Projektstruktur
@@ -292,11 +321,24 @@ ALLOWED_ORIGINS=https://frontend.example.com,https://app.example.com
 -   Mehrere URLs mit Komma trennen (ohne Leerzeichen nach dem Komma)
 -   URLs müssen exakt übereinstimmen (inkl. Protokoll und Port)
 
-## 🗄️ Datenbank-Schema
+## 🗄️ Datenbank-Schema & Migrationen
 
-Die Datenbank wird automatisch beim ersten Start initialisiert (`db/init.sql`):
+### Automatische Migrationen
 
-### Tabellen
+Beim Start des Backend-Containers (nur wenn `RUN_MIGRATIONS=true`) wird automatisch `db/init.sql` ausgeführt:
+
+-   **Docker Compose:** Migrationen laufen automatisch ✅
+-   **Lokale Entwicklung:** Keine Migrationen (DB bleibt leer) ⏭️
+
+Um Migrationen auch lokal auszuführen, setze in deiner `.env`:
+
+```env
+RUN_MIGRATIONS=true
+```
+
+### Schema
+
+Die Datenbank enthält folgende Tabellen (`db/init.sql`):
 
 -   **users** - Benutzer-Daten
 
@@ -347,8 +389,35 @@ const { rows } = await db.pool.query("SELECT * FROM products");
 
 ## 🚢 Deployment
 
-Der Entry Point ist `src/index.js`. Stelle sicher, dass dein Deployment-Script diesen Pfad verwendet.
+### Docker Deployment (Empfohlen)
+
+Das komplette Setup kann mit Docker Compose deployed werden:
 
 ```bash
-npm start
+# Production-Build erstellen
+docker-compose up -d --build
+
+# Überprüfen
+docker-compose ps
+curl http://localhost:3000/api/health
 ```
+
+### Manuelle Deployment
+
+Der Entry Point ist `src/index.js`:
+
+```bash
+npm install --production
+NODE_ENV=production node src/index.js
+```
+
+### Umgebungsvariablen für Production
+
+Setze folgende Umgebungsvariablen in deiner Production-Umgebung:
+
+-   `NODE_ENV=production`
+-   `POSTGRES_HOST` - Datenbank-Host
+-   `POSTGRES_USER` - Datenbank-User
+-   `POSTGRES_PASSWORD` - Datenbank-Passwort
+-   `POSTGRES_DB` - Datenbank-Name
+-   `ALLOWED_ORIGINS` - Erlaubte Frontend-URLs (komma-separiert)

@@ -5,6 +5,7 @@ const logger = require("./middleware/logger");
 const errorHandler = require("./middleware/errorHandler");
 const routes = require("./routes");
 const db = require("./config/database");
+const { runMigrations } = require("./config/migrate");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -58,6 +59,9 @@ app.listen(port, async () => {
 
     // Datenbank-Verbindungstest
     await db.testConnection();
+
+    // Datenbank-Migrationen ausführen (nur wenn RUN_MIGRATIONS=true)
+    await runMigrations();
 });
 
 // Graceful Shutdown
