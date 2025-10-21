@@ -27,6 +27,12 @@ app.get("/", (req, res) => {
             orders: "/api/orders",
             health: "/api/health",
         },
+        demo_endpoints: {
+            users: "/api/demo/users",
+            products: "/api/demo/products",
+            orders: "/api/demo/orders",
+        },
+        info: "Main endpoints (/api/*) use PostgreSQL. Demo endpoints (/api/demo/*) use mock data.",
     });
 });
 

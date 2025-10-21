@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const productsController = require("../controllers/products.controller");
+const productsController = require("../../controllers/db/products.controller");
 
 // GET /api/products - Alle Products
 router.get("/", productsController.getAllProducts.bind(productsController));
@@ -15,9 +15,6 @@ router.post("/", productsController.createProduct.bind(productsController));
 router.put("/:id", productsController.updateProduct.bind(productsController));
 
 // DELETE /api/products/:id - Product löschen
-router.delete(
-  "/:id",
-  productsController.deleteProduct.bind(productsController)
-);
+router.delete("/:id", productsController.deleteProduct.bind(productsController));
 
 module.exports = router;

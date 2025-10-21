@@ -71,12 +71,22 @@ docker exec -it lowcloud-postgres psql -U postgres -d lowcloud_db
 
 ```
 /src
-  /routes       → Router-Definitionen (HTTP-Routen)
-  /controllers  → Request-Handler (Business Logic)
-  /services     → Geschäftslogik / Data Access
-  /middleware   → Custom Middleware (Error Handler, Logging)
-  /utils        → Hilfsfunktionen
-  index.js      → Entry Point
+  /routes
+    /db                → DB-Routes (PostgreSQL)
+    /demo              → Demo-Routes (Mock-Daten)
+    index.js           → Haupt-Router
+  /controllers
+    /db                → DB-Controller (PostgreSQL)
+    /demo              → Demo-Controller (Mock-Daten)
+  /services
+    /db                → DB-Services (PostgreSQL)
+    /demo              → Demo-Services (Mock-Daten)
+  /middleware          → Custom Middleware (Error Handler, Logging)
+  /config              → Konfiguration (Database Connection Pool)
+  /utils               → Hilfsfunktionen
+  index.js             → Entry Point
+/db
+  init.sql             → Datenbank-Schema & Seed-Daten
 ```
 
 ## 🔌 API-Endpunkte
@@ -89,52 +99,125 @@ docker exec -it lowcloud-postgres psql -U postgres -d lowcloud_db
 
 -   `GET /api/health` - Status des Servers
 
-### Users
+### Demo Endpoints (Mock-Daten)
 
--   `GET /api/users` - Alle Users
--   `GET /api/users/:id` - User by ID
--   `POST /api/users` - User erstellen
--   `PUT /api/users/:id` - User aktualisieren
--   `DELETE /api/users/:id` - User löschen
+Diese Endpoints nutzen In-Memory Mock-Daten und dienen zu Demonstrationszwecken.
 
-### Products
+**Users:**
 
--   `GET /api/products` - Alle Products
--   `GET /api/products/:id` - Product by ID
--   `POST /api/products` - Product erstellen
--   `PUT /api/products/:id` - Product aktualisieren
--   `DELETE /api/products/:id` - Product löschen
+-   `GET /api/demo/users` - Alle Users
+-   `GET /api/demo/users/:id` - User by ID
+-   `POST /api/demo/users` - User erstellen
+-   `PUT /api/demo/users/:id` - User aktualisieren
+-   `DELETE /api/demo/users/:id` - User löschen
 
-### Orders
+**Products:**
 
--   `GET /api/orders` - Alle Orders
--   `GET /api/orders/:id` - Order by ID
--   `POST /api/orders` - Order erstellen
--   `PUT /api/orders/:id` - Order aktualisieren
--   `DELETE /api/orders/:id` - Order löschen
+-   `GET /api/demo/products` - Alle Products
+-   `GET /api/demo/products/:id` - Product by ID
+-   `POST /api/demo/products` - Product erstellen
+-   `PUT /api/demo/products/:id` - Product aktualisieren
+-   `DELETE /api/demo/products/:id` - Product löschen
+
+**Orders:**
+
+-   `GET /api/demo/orders` - Alle Orders
+-   `GET /api/demo/orders/:id` - Order by ID
+-   `POST /api/demo/orders` - Order erstellen
+-   `PUT /api/demo/orders/:id` - Order aktualisieren
+-   `DELETE /api/demo/orders/:id` - Order löschen
+
+### Database Endpoints (PostgreSQL)
+
+Diese Endpoints nutzen die PostgreSQL-Datenbank für persistente Datenspeicherung.
+
+**Users:**
+
+-   `GET /api/users` - Alle Users aus DB
+-   `GET /api/users/:id` - User by ID aus DB
+-   `POST /api/users` - User in DB erstellen (Body: `username`, `email`)
+-   `PUT /api/users/:id` - User in DB aktualisieren
+-   `DELETE /api/users/:id` - User aus DB löschen
+
+**Products:**
+
+-   `GET /api/products` - Alle Products aus DB
+-   `GET /api/products/:id` - Product by ID aus DB
+-   `POST /api/products` - Product in DB erstellen (Body: `name`, `description`, `price`, `stock`)
+-   `PUT /api/products/:id` - Product in DB aktualisieren
+-   `DELETE /api/products/:id` - Product aus DB löschen
+
+**Orders:**
+
+-   `GET /api/orders` - Alle Orders aus DB (mit User-Daten)
+-   `GET /api/orders/:id` - Order by ID aus DB (mit Items und Product-Details)
+-   `POST /api/orders` - Order in DB erstellen (Body: `user_id`, `items[]`, optional `status`)
+-   `PUT /api/orders/:id` - Order-Status aktualisieren (Body: `status`)
+-   `DELETE /api/orders/:id` - Order aus DB löschen (inkl. Items)
 
 ## 📝 Beispiel-Requests
 
-### User erstellen
+### Database Endpoints (PostgreSQL)
+
+**User erstellen:**
 
 ```bash
 curl -X POST http://localhost:3000/api/users \
   -H "Content-Type: application/json" \
-  -d '{"name":"John Doe","email":"john@example.com"}'
+  -d '{"username":"johndoe","email":"john@example.com"}'
 ```
 
-### Product erstellen
+**Product erstellen:**
 
 ```bash
 curl -X POST http://localhost:3000/api/products \
   -H "Content-Type: application/json" \
-  -d '{"name":"Monitor","price":299.99,"stock":20}'
+  -d '{"name":"Monitor","description":"27 inch 4K","price":299.99,"stock":20}'
 ```
 
-### Order erstellen
+**Order erstellen:**
 
 ```bash
 curl -X POST http://localhost:3000/api/orders \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_id": 1,
+    "items": [
+      {"product_id": 1, "quantity": 2, "price": 999.99},
+      {"product_id": 2, "quantity": 1, "price": 29.99}
+    ],
+    "status": "pending"
+  }'
+```
+
+**Order abrufen (mit Items):**
+
+```bash
+curl http://localhost:3000/api/orders/1
+```
+
+### Demo-Endpoints (Mock-Daten)
+
+**User erstellen:**
+
+```bash
+curl -X POST http://localhost:3000/api/demo/users \
+  -H "Content-Type: application/json" \
+  -d '{"name":"John Doe","email":"john@example.com"}'
+```
+
+**Product erstellen:**
+
+```bash
+curl -X POST http://localhost:3000/api/demo/products \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Monitor","price":299.99,"stock":20}'
+```
+
+**Order erstellen:**
+
+```bash
+curl -X POST http://localhost:3000/api/demo/orders \
   -H "Content-Type: application/json" \
   -d '{"userId":1,"items":[{"productId":1,"quantity":2}],"total":1999.98}'
 ```
@@ -152,8 +235,15 @@ Request → Logger Middleware
 **Layers:**
 
 -   **Routes**: Definieren HTTP-Endpunkte und binden Controller
+    -   `/routes/db/*` - PostgreSQL-basierte Endpoints (`/api/*`)
+    -   `/routes/demo/*` - Mock-basierte Endpoints (`/api/demo/*`)
 -   **Controllers**: Verarbeiten Requests, Validierung, rufen Services auf
--   **Services**: Business Logic, Daten-Management (aktuell Mock-Daten)
+    -   `/controllers/db/*` - DB-Controller
+    -   `/controllers/demo/*` - Mock-Controller
+-   **Services**: Business Logic, Daten-Management
+    -   `/services/db/*` - PostgreSQL-Services (echte DB-Queries)
+    -   `/services/demo/*` - Mock-Services (In-Memory-Daten)
+-   **Config**: Database Connection Pool (`/config/database.js`)
 -   **Middleware**: Error Handler, Logger, etc.
 -   **Utils**: Response-Helper für konsistente API-Responses
 

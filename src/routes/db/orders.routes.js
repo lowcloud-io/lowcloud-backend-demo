@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const ordersController = require("../controllers/orders.controller");
+const ordersController = require("../../controllers/db/orders.controller");
 
 // GET /api/orders - Alle Orders
 router.get("/", ordersController.getAllOrders.bind(ordersController));
