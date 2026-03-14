@@ -22,6 +22,9 @@ docker-compose logs -f backend
 # Nur DB-Logs
 docker-compose logs -f postgres
 
+# Nur Redis-Logs
+docker-compose logs -f redis
+
 # Services stoppen
 docker-compose down
 
@@ -63,6 +66,11 @@ POSTGRES_PORT=5433
 
 # Database Connection String
 DATABASE_URL=postgresql://postgres:postgres@localhost:5433/lowcloud_db
+
+# Redis Configuration
+REDIS_URL=redis://localhost:6379
+RATE_LIMIT_MAX=200
+RATE_LIMIT_WRITE_MAX=30
 ```
 
 #### c) Dependencies installieren & Server lokal starten
@@ -255,6 +263,7 @@ curl -X POST http://localhost:3000/api/demo/orders \
 
 ```
 Request → Logger Middleware
+       → Rate Limiter (Redis-backed, IP-basiert)
        → Router (routes/)
        → Controller (controllers/)
        → Service (services/)
@@ -272,8 +281,8 @@ Request → Logger Middleware
 -   **Services**: Business Logic, Daten-Management
     -   `/services/db/*` - PostgreSQL-Services (echte DB-Queries)
     -   `/services/demo/*` - Mock-Services (In-Memory-Daten)
--   **Config**: Database Connection Pool (`/config/database.js`)
--   **Middleware**: Error Handler, Logger, etc.
+-   **Config**: Database Connection Pool (`/config/database.js`), Redis Client (`/config/redis.js`)
+-   **Middleware**: Rate Limiter (Redis-backed), Error Handler, Logger
 -   **Utils**: Response-Helper für konsistente API-Responses
 
 ## 🔧 Environment Variables
@@ -293,6 +302,9 @@ Erstelle eine `.env` Datei im Root-Verzeichnis (siehe Beispiele oben im Quick St
 | `POSTGRES_HOST`     | PostgreSQL Host                          | `localhost`                                                 | `localhost` (local) / `postgres` (Docker network) |
 | `POSTGRES_PORT`     | PostgreSQL Port                          | `5433`                                                      | `5433`                                            |
 | `DATABASE_URL`      | PostgreSQL Connection String             | `postgresql://postgres:postgres@localhost:5433/lowcloud_db` | -                                                 |
+| `REDIS_URL`         | Redis Connection String                  | `redis://localhost:6379`                                    | `redis://redis:6379` (Docker network)             |
+| `RATE_LIMIT_MAX`    | Max. Requests pro IP / 15 Min (alle)     | `200`                                                       | `100`                                             |
+| `RATE_LIMIT_WRITE_MAX` | Max. Schreibanfragen pro IP / 15 Min  | `30`                                                        | `10`                                              |
 
 ### CORS-Konfiguration
 
@@ -379,12 +391,62 @@ const result = await db.query("SELECT * FROM users WHERE id = $1", [userId]);
 const { rows } = await db.pool.query("SELECT * FROM products");
 ```
 
+## 🔴 Redis & Rate Limiting
+
+Der Service nutzt Redis als verteilten Store für IP-basiertes Rate Limiting.
+
+**Zwei Limiter sind aktiv:**
+
+| Limiter | Scope | Limit | Methoden |
+|---|---|---|---|
+| `apiLimiter` | Alle `/api/*` Routen | 200 req / 15 min | GET, POST, PUT, DELETE |
+| `writeLimiter` | Alle `/api/*` Routen | 30 req / 15 min | POST, PUT, DELETE |
+
+Bei Überschreitung antwortet der Server mit HTTP `429`:
+
+```json
+{
+  "success": false,
+  "message": "Zu viele Anfragen von dieser IP. Bitte warte 15 Minuten.",
+  "retryAfter": 847
+}
+```
+
+Die verbleibenden Requests sind in jedem Response-Header sichtbar:
+
+```
+RateLimit-Limit: 200
+RateLimit-Remaining: 197
+RateLimit-Reset: 1
+```
+
+**Graceful Degradation:** Ist Redis nicht erreichbar, fällt der Rate Limiter automatisch auf einen In-Memory Store zurück – der Server bleibt verfügbar.
+
+**Redis inspizieren:**
+
+```bash
+# Redis CLI öffnen
+docker exec -it lowcloud-redis redis-cli
+
+# Aktive Rate-Limit-Keys anzeigen
+KEYS *
+
+# Counter einer IP abrufen
+GET rl:10.89.9.7
+
+# Verbleibende Zeit bis Reset (Sekunden)
+TTL rl:10.89.9.7
+```
+
 ## 📦 Dependencies
 
 -   `express` - Web Framework
 -   `cors` - CORS Middleware
 -   `dotenv` - Environment Variables
 -   `pg` - PostgreSQL Client
+-   `ioredis` - Redis Client
+-   `express-rate-limit` - Rate Limiting Middleware
+-   `rate-limit-redis` - Redis Store für Rate Limiter
 -   `nodemon` - Development Hot-Reload (devDependency)
 
 ## 🚢 Deployment
