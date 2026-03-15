@@ -61,7 +61,8 @@ services:
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-*}
 
       # Redis Configuration
-      REDIS_URL: redis://redis:6379
+      REDIS_HOST: redis # Service-Name im Docker-Netzwerk
+      REDIS_PORT: 6379
       RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-200}
       RATE_LIMIT_WRITE_MAX: ${RATE_LIMIT_WRITE_MAX:-30}
     ports:
