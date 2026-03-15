@@ -63,6 +63,26 @@ app.use((req, res) => {
 // Error Handler (muss als letztes Middleware kommen)
 app.use(errorHandler);
 
+// Debug: Environment-Variablen loggen (Passwörter maskiert)
+const mask = (val) => val ? `${val.slice(0, 3)}***` : "(nicht gesetzt)";
+const show = (val) => val || "(nicht gesetzt)";
+console.log("── ENV Debug ──────────────────────────────────");
+console.log("  POSTGRES_HOST:       ", show(process.env.POSTGRES_HOST));
+console.log("  POSTGRES_PORT:       ", show(process.env.POSTGRES_PORT));
+console.log("  POSTGRES_USER:       ", show(process.env.POSTGRES_USER));
+console.log("  POSTGRES_PASSWORD:   ", mask(process.env.POSTGRES_PASSWORD));
+console.log("  POSTGRES_DB:         ", show(process.env.POSTGRES_DB));
+console.log("  DATABASE_URL:        ", show(process.env.DATABASE_URL?.replace(/:([^@]+)@/, ":***@")));
+console.log("  REDIS_HOST:          ", show(process.env.REDIS_HOST));
+console.log("  REDIS_PORT:          ", show(process.env.REDIS_PORT));
+console.log("  REDIS_PASSWORD:      ", mask(process.env.REDIS_PASSWORD));
+console.log("  REDIS_URL:           ", show(process.env.REDIS_URL?.replace(/:([^@]+)@/, ":***@")));
+console.log("  RATE_LIMIT_MAX:      ", show(process.env.RATE_LIMIT_MAX));
+console.log("  RATE_LIMIT_WRITE_MAX:", show(process.env.RATE_LIMIT_WRITE_MAX));
+console.log("  NODE_ENV:            ", show(process.env.NODE_ENV));
+console.log("  PORT:                ", show(process.env.PORT));
+console.log("───────────────────────────────────────────────");
+
 // Server starten
 app.listen(port, async () => {
     console.log(`🚀 Server running on port ${port}`);
