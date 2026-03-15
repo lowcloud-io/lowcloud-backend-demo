@@ -70,6 +70,7 @@ DATABASE_URL=postgresql://postgres:postgres@localhost:5433/lowcloud_db
 # Redis Configuration
 REDIS_HOST=localhost
 REDIS_PORT=6379
+# REDIS_PASSWORD=your_redis_password  # nur wenn Redis Auth aktiviert ist
 RATE_LIMIT_MAX=200
 RATE_LIMIT_WRITE_MAX=30
 ```
@@ -305,7 +306,8 @@ Erstelle eine `.env` Datei im Root-Verzeichnis (siehe Beispiele oben im Quick St
 | `DATABASE_URL`      | PostgreSQL Connection String             | `postgresql://postgres:postgres@localhost:5433/lowcloud_db` | -                                                 |
 | `REDIS_HOST`        | Redis Host                               | `localhost`                                                 | `localhost` (local) / `redis` (Docker network)    |
 | `REDIS_PORT`        | Redis Port                               | `6379`                                                      | `6379`                                            |
-| `REDIS_URL`         | Redis Connection String (Override)       | gebaut aus `REDIS_HOST` + `REDIS_PORT`                      | `redis://:password@host:6379` (mit Auth)          |
+| `REDIS_PASSWORD`    | Redis Passwort (optional)                | leer (kein Auth)                                            | `XzzDq7xC3L5w8ipNLxtVpYXnXyJQU6U2`               |
+| `REDIS_URL`         | Redis Connection String (Override)       | gebaut aus `REDIS_HOST` + `REDIS_PORT` + `REDIS_PASSWORD`   | `redis://:password@host:6379` (manueller Override)|
 | `RATE_LIMIT_MAX`    | Max. Requests pro IP / 15 Min (alle)     | `200`                                                       | `100`                                             |
 | `RATE_LIMIT_WRITE_MAX` | Max. Schreibanfragen pro IP / 15 Min  | `30`                                                        | `10`                                              |
 

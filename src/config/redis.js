@@ -1,8 +1,14 @@
 const Redis = require("ioredis");
 
+const REDIS_HOST = process.env.REDIS_HOST || "localhost";
+const REDIS_PORT = process.env.REDIS_PORT || 6379;
+const REDIS_PASSWORD = process.env.REDIS_PASSWORD || "";
+
 const REDIS_URL =
     process.env.REDIS_URL ||
-    `redis://${process.env.REDIS_HOST || "localhost"}:${process.env.REDIS_PORT || 6379}`;
+    (REDIS_PASSWORD
+        ? `redis://:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT}`
+        : `redis://${REDIS_HOST}:${REDIS_PORT}`);
 
 const redisClient = new Redis(REDIS_URL, {
     enableReadyCheck: true,

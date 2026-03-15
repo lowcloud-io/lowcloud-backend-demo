@@ -63,6 +63,7 @@ services:
       # Redis Configuration
       REDIS_HOST: redis # Service-Name im Docker-Netzwerk
       REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
       RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-200}
       RATE_LIMIT_WRITE_MAX: ${RATE_LIMIT_WRITE_MAX:-30}
     ports:
