@@ -3,11 +3,11 @@ const express = require("express");
 const corsMiddleware = require("./middleware/cors");
 const logger = require("./middleware/logger");
 const errorHandler = require("./middleware/errorHandler");
-const { apiLimiter, writeLimiter } = require("./middleware/rateLimiter");
+// const { apiLimiter, writeLimiter } = require("./middleware/rateLimiter"); // Redis/Rate-Limiting deaktiviert (no-redis)
 const routes = require("./routes");
 const db = require("./config/database");
 const { runMigrations } = require("./config/migrate");
-const { connectRedis, closeRedis } = require("./config/redis");
+// const { connectRedis, closeRedis } = require("./config/redis"); // Redis deaktiviert (no-redis)
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -18,15 +18,16 @@ app.use(express.urlencoded({ extended: true }));
 app.use(corsMiddleware); // CORS before routes
 app.use(logger);
 
-// Rate Limiting – global für alle /api Routen
-app.use("/api", apiLimiter);
-// Strengeres Limit für schreibende Operationen
-app.use("/api", (req, res, next) => {
-    if (["POST", "PUT", "DELETE"].includes(req.method)) {
-        return writeLimiter(req, res, next);
-    }
-    next();
-});
+// Rate Limiting deaktiviert (no-redis) – benötigt Redis als Store
+// // Rate Limiting – global für alle /api Routen
+// app.use("/api", apiLimiter);
+// // Strengeres Limit für schreibende Operationen
+// app.use("/api", (req, res, next) => {
+//     if (["POST", "PUT", "DELETE"].includes(req.method)) {
+//         return writeLimiter(req, res, next);
+//     }
+//     next();
+// });
 
 // Root Endpoint
 app.get("/", (req, res) => {
@@ -92,8 +93,8 @@ app.listen(port, async () => {
     // Datenbank-Verbindungstest
     await db.testConnection();
 
-    // Redis verbinden (non-blocking – Degradation auf In-Memory bei Fehler)
-    await connectRedis();
+    // Redis deaktiviert (no-redis)
+    // await connectRedis();
 
     // Datenbank-Migrationen ausführen (nur wenn RUN_MIGRATIONS=true)
     await runMigrations();
@@ -103,13 +104,13 @@ app.listen(port, async () => {
 process.on("SIGTERM", async () => {
     console.log("⚠️  SIGTERM empfangen, fahre Server herunter...");
     await db.closePool();
-    await closeRedis();
+    // await closeRedis(); // Redis deaktiviert (no-redis)
     process.exit(0);
 });
 
 process.on("SIGINT", async () => {
     console.log("⚠️  SIGINT empfangen, fahre Server herunter...");
     await db.closePool();
-    await closeRedis();
+    // await closeRedis(); // Redis deaktiviert (no-redis)
     process.exit(0);
 });

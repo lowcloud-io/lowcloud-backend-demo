@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { isRedisReady } = require("../config/redis");
+// const { isRedisReady } = require("../config/redis"); // Redis deaktiviert (no-redis)
 
 // Import Demo-Router (Mock-Daten)
 const demoUsersRoutes = require("./demo/users.routes");
@@ -24,13 +24,14 @@ router.use("/orders", dbOrdersRoutes);
 
 // Health-Check Endpoint
 router.get("/health", (req, res) => {
-    const redisReady = isRedisReady();
+    // const redisReady = isRedisReady(); // Redis deaktiviert (no-redis)
     res.json({
         success: true,
         message: "API is running",
         timestamp: new Date().toISOString(),
         services: {
-            redis: redisReady ? "connected" : "unavailable (in-memory fallback)",
+            database: "postgresql",
+            // redis: redisReady ? "connected" : "unavailable (in-memory fallback)", // Redis deaktiviert (no-redis)
         },
     });
 });

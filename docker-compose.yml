@@ -1,19 +1,20 @@
 version: "3.8"
 
 services:
-  redis:
-    image: redis:7-alpine
-    container_name: lowcloud-redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - lowcloud-network
+  # Redis deaktiviert (no-redis)
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: lowcloud-redis
+  #   restart: unless-stopped
+  #   ports:
+  #     - "6379:6379"
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   networks:
+  #     - lowcloud-network
 
   postgres:
     image: postgres:18-alpine
@@ -60,19 +61,19 @@ services:
       # CORS Configuration (optional)
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-*}
 
-      # Redis Configuration
-      REDIS_HOST: redis # Service-Name im Docker-Netzwerk
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
-      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-200}
-      RATE_LIMIT_WRITE_MAX: ${RATE_LIMIT_WRITE_MAX:-30}
+      # Redis Configuration – deaktiviert (no-redis)
+      # REDIS_HOST: redis # Service-Name im Docker-Netzwerk
+      # REDIS_PORT: 6379
+      # REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      # RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-200}
+      # RATE_LIMIT_WRITE_MAX: ${RATE_LIMIT_WRITE_MAX:-30}
     ports:
       - "3000:3000"
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_healthy
+      # redis: # Redis deaktiviert (no-redis)
+      #   condition: service_healthy
     networks:
       - lowcloud-network
 

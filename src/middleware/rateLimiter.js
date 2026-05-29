@@ -1,13 +1,14 @@
 const rateLimit = require("express-rate-limit");
-const { RedisStore } = require("rate-limit-redis");
-const { redisClient } = require("../config/redis");
+// Redis-Store deaktiviert (no-redis) – Fallback auf Default-In-Memory-Store
+// const { RedisStore } = require("rate-limit-redis");
+// const { redisClient } = require("../config/redis");
 
-// Store wird immer erstellt – sendCommand wird erst bei eingehenden Requests aufgerufen,
-// nicht beim Modulstart. Redis ist dann bereits verbunden.
-const buildStore = () =>
-    new RedisStore({
-        sendCommand: (...args) => redisClient.call(...args),
-    });
+// // Store wird immer erstellt – sendCommand wird erst bei eingehenden Requests aufgerufen,
+// // nicht beim Modulstart. Redis ist dann bereits verbunden.
+// const buildStore = () =>
+//     new RedisStore({
+//         sendCommand: (...args) => redisClient.call(...args),
+//     });
 
 const createLimiter = ({ windowMs, max, message }) =>
     rateLimit({
@@ -15,7 +16,7 @@ const createLimiter = ({ windowMs, max, message }) =>
         max,
         standardHeaders: true,  // RateLimit-* Header im Response
         legacyHeaders: false,   // X-RateLimit-* Header deaktivieren
-        store: buildStore(),
+        // store: buildStore(), // Redis-Store deaktiviert (no-redis) – nutzt Default-In-Memory-Store
         passOnStoreError: true, // Bei Redis-Fehler Request durchlassen statt crashen
         handler: (req, res) => {
             const retryAfter = res.getHeader("Retry-After");
